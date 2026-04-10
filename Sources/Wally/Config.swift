@@ -6,7 +6,7 @@ struct WallyConfig: Codable {
     var launchAtLogin: Bool
 
     static let defaultDirectory = NSString(
-        string: "~/Workspaces/dotfiles/wallpapers"
+        string: "~/.config/wally/wallpapers"
     ).expandingTildeInPath
 }
 
@@ -32,6 +32,13 @@ class Config {
                 launchAtLogin: false
             )
         }
+
+        ensureWallpaperDirectoryExists()
+    }
+
+    private func ensureWallpaperDirectoryExists() {
+        let url = URL(fileURLWithPath: config.wallpaperDirectory, isDirectory: true)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     }
 
     var wallpaperDirectoryURL: URL {
@@ -51,6 +58,7 @@ class Config {
         config.wallpaperDirectory = path
         config.assignments = [:]
         save()
+        ensureWallpaperDirectoryExists()
     }
 
     func setLaunchAtLogin(_ enabled: Bool) {

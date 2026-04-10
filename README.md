@@ -94,7 +94,7 @@ Config is stored at `~/Library/Application Support/Wally/config.json`:
 - `assignments` — maps display IDs to video filenames
 - `launchAtLogin` — whether Wally starts on login
 
-The wallpaper directory defaults to `~/Workspaces/dotfiles/wallpapers` and can be changed via the menu bar or by editing the config file directly.
+The wallpaper directory defaults to `~/.config/wally/wallpapers/` and can be changed via the menu bar or by editing the config file directly.
 
 ## SketchyBar Integration
 
@@ -116,7 +116,7 @@ wallpaper set "$VIDEO" --all
 ```
 Wally.app (menu bar)  <-- Unix socket -->  wallpaper (CLI)
      |
-     +-- DisplayManager --> [WallpaperWindow + WKWebView] per display
+     +-- DisplayManager --> [WallpaperWindow + AVPlayerLayer] per display
      +-- Config         --> ~/Library/Application Support/Wally/config.json
      +-- SocketServer   --> /tmp/com.mikevanleeuwen.wally.sock
 ```

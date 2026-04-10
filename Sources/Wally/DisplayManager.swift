@@ -38,16 +38,15 @@ class DisplayManager {
     func setWallpaper(_ video: String, displayID: CGDirectDisplayID) {
         config.setAssignment(displayID: displayID, video: video)
         if let window = windows[displayID] {
-            let html = wallpaperManager.htmlString(for: video)
-            window.loadVideo(html, baseURL: wallpaperManager.wallpaperDirectoryURL)
+            window.loadVideo(url: wallpaperManager.videoURL(for: video))
         }
     }
 
     func setWallpaperOnAll(_ video: String) {
+        let url = wallpaperManager.videoURL(for: video)
         for (id, window) in windows {
             config.setAssignment(displayID: id, video: video)
-            let html = wallpaperManager.htmlString(for: video)
-            window.loadVideo(html, baseURL: wallpaperManager.wallpaperDirectoryURL)
+            window.loadVideo(url: url)
         }
     }
 
@@ -93,12 +92,10 @@ class DisplayManager {
 
         if !videos.contains(video), let fallback = videos.first {
             config.setAssignment(displayID: displayID, video: fallback)
-            let html = wallpaperManager.htmlString(for: fallback)
-            window.loadVideo(html, baseURL: wallpaperManager.wallpaperDirectoryURL)
+            window.loadVideo(url: wallpaperManager.videoURL(for: fallback))
         } else {
             config.setAssignment(displayID: displayID, video: video)
-            let html = wallpaperManager.htmlString(for: video)
-            window.loadVideo(html, baseURL: wallpaperManager.wallpaperDirectoryURL)
+            window.loadVideo(url: wallpaperManager.videoURL(for: video))
         }
     }
 

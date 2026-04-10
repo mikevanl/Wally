@@ -10,7 +10,7 @@ let package = Package(
             path: "Sources/Wally",
             linkerSettings: [
                 .linkedFramework("AppKit"),
-                .linkedFramework("WebKit"),
+                .linkedFramework("AVFoundation"),
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("ServiceManagement"),
             ]

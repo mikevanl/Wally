@@ -14,6 +14,7 @@ mkdir -p "$APP_DIR/MacOS"
 mkdir -p "$APP_DIR/Resources"
 cp "$BUILD_DIR/Wally" "$APP_DIR/MacOS/Wally"
 cp "Resources/Info.plist" "$APP_DIR/Info.plist"
+cp "Resources/AppIcon.icns" "$APP_DIR/Resources/AppIcon.icns"
 
 codesign --force --sign - "$APP_DIR/MacOS/Wally"
 codesign --force --sign - "$BUILD_DIR/Wally.app"

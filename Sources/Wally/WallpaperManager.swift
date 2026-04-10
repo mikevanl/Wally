@@ -22,23 +22,7 @@ class WallpaperManager {
             .sorted()
     }
 
-    func htmlString(for video: String) -> String {
-        """
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <style>
-        *{margin:0;padding:0}
-        body{overflow:hidden;background:#000}
-        video{width:100vw;height:100vh;object-fit:cover}
-        </style>
-        </head>
-        <body>
-        <video autoplay muted loop playsinline>
-        <source src="\(video)" type="video/mp4">
-        </video>
-        </body>
-        </html>
-        """
+    func videoURL(for filename: String) -> URL {
+        config.wallpaperDirectoryURL.appendingPathComponent(filename)
     }
 }

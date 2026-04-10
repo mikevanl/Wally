@@ -103,8 +103,16 @@ class MenuBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
 
+        let openDirItem = NSMenuItem(
+            title: "Open Wallpaper Folder",
+            action: #selector(openWallpaperFolder),
+            keyEquivalent: ""
+        )
+        openDirItem.target = self
+        menu.addItem(openDirItem)
+
         let dirItem = NSMenuItem(
-            title: "Wallpaper Folder\u{2026}",
+            title: "Change Wallpaper Folder\u{2026}",
             action: #selector(changeWallpaperFolder),
             keyEquivalent: ""
         )
@@ -166,6 +174,10 @@ class MenuBarController: NSObject, NSMenuDelegate {
         } catch {
             NSLog("Wally: failed to toggle launch at login: \(error)")
         }
+    }
+
+    @objc private func openWallpaperFolder() {
+        NSWorkspace.shared.open(config.wallpaperDirectoryURL)
     }
 
     @objc private func changeWallpaperFolder() {

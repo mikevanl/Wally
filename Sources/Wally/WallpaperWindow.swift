@@ -1,20 +1,17 @@
 import AppKit
-import WebKit
+import AVFoundation
 
 class WallpaperWindow: NSWindow {
     let displayID: CGDirectDisplayID
-    let webView: WKWebView
+    private let playerLayer: AVPlayerLayer
+    private var player: AVPlayer?
+    private var loopObserver: Any?
     private var isPaused = false
 
     init(displayID: CGDirectDisplayID, screen: NSScreen) {
         self.displayID = displayID
-
-        let config = WKWebViewConfiguration()
-        config.mediaTypesRequiringUserActionForPlayback = []
-        config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
-
-        self.webView = WKWebView(frame: screen.frame, configuration: config)
-        webView.setValue(false, forKey: "drawsBackground")
+        self.playerLayer = AVPlayerLayer()
+        playerLayer.videoGravity = .resizeAspectFill
 
         super.init(
             contentRect: screen.frame,
@@ -33,35 +30,52 @@ class WallpaperWindow: NSWindow {
         backgroundColor = .black
         isReleasedWhenClosed = false
 
-        contentView = webView
+        let view = NSView(frame: screen.frame)
+        view.wantsLayer = true
+        view.layer = CALayer()
+        playerLayer.frame = view.bounds
+        playerLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        view.layer?.addSublayer(playerLayer)
+        contentView = view
+
         orderFrontRegardless()
     }
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
-    func loadVideo(_ html: String, baseURL: URL) {
-        // Write HTML to a temp file in the wallpaper directory so loadFileURL
-        // can grant read access to sibling video files. loadHTMLString + file://
-        // baseURL does not grant actual filesystem read access.
-        let tempFile = baseURL.appendingPathComponent(".wally-\(displayID).html")
-        do {
-            try html.write(to: tempFile, atomically: true, encoding: .utf8)
-            webView.loadFileURL(tempFile, allowingReadAccessTo: baseURL)
-        } catch {
-            NSLog("Wally: failed to write temp HTML for display \(displayID): \(error)")
-            webView.loadHTMLString(html, baseURL: baseURL)
+    func loadVideo(url: URL) {
+        removeLoopObserver()
+
+        let item = AVPlayerItem(url: url)
+        if let player {
+            player.replaceCurrentItem(with: item)
+        } else {
+            player = AVPlayer(playerItem: item)
+            player?.isMuted = true
+            playerLayer.player = player
         }
+
+        loopObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            self?.player?.seek(to: .zero)
+            self?.player?.play()
+        }
+
+        player?.play()
         isPaused = false
     }
 
     func pauseVideo() {
-        webView.evaluateJavaScript("document.querySelector('video')?.pause()")
+        player?.pause()
         isPaused = true
     }
 
     func resumeVideo() {
-        webView.evaluateJavaScript("document.querySelector('video')?.play()")
+        player?.play()
         isPaused = false
     }
 
@@ -69,6 +83,18 @@ class WallpaperWindow: NSWindow {
 
     func updateFrame(for screen: NSScreen) {
         setFrame(screen.frame, display: true)
-        webView.frame = NSRect(origin: .zero, size: screen.frame.size)
+        contentView?.frame = NSRect(origin: .zero, size: screen.frame.size)
+        playerLayer.frame = contentView?.bounds ?? .zero
+    }
+
+    private func removeLoopObserver() {
+        if let loopObserver {
+            NotificationCenter.default.removeObserver(loopObserver)
+        }
+        loopObserver = nil
+    }
+
+    deinit {
+        removeLoopObserver()
     }
 }
