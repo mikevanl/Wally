@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from commit count
+        id: version
+        run: |
+          COUNT=$(git rev-list --count HEAD)
+          VERSION="1.0.${COUNT}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.exists == 'false'
+        run: swift build -c release
+
+      - name: Create release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes
+
+      - name: Update Homebrew formula
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          TARBALL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+          SHA=$(curl -sL "$TARBALL" | shasum -a 256 | awk '{print $1}')
+
+          # Fetch current formula
+          gh api repos/mikevanl/homebrew-tap/contents/Formula/wally.rb \
+            --jq '.content' | base64 -d > /tmp/wally.rb
+          FILE_SHA=$(gh api repos/mikevanl/homebrew-tap/contents/Formula/wally.rb --jq '.sha')
+
+          # Update url and sha256 lines
+          sed -i '' "s|url \".*\"|url \"${TARBALL}\"|" /tmp/wally.rb
+          sed -i '' "s|sha256 \".*\"|sha256 \"${SHA}\"|" /tmp/wally.rb
+
+          CONTENT=$(base64 -i /tmp/wally.rb)
+
+          gh api repos/mikevanl/homebrew-tap/contents/Formula/wally.rb \
+            --method PUT \
+            --field message="Update wally to ${TAG}" \
+            --field content="$CONTENT" \
+            --field sha="$FILE_SHA" \
+            --silent
