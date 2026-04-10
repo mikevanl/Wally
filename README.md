@@ -1,6 +1,6 @@
 # Wally
 
-A native macOS menu bar app that renders video wallpapers on your desktop using WKWebView. Built with Swift, AppKit, and WebKit — no third-party dependencies.
+A native macOS menu bar app that renders video wallpapers on your desktop using AVPlayer. Built with Swift and AppKit — no third-party dependencies.
 
 Replaces [Plash](https://github.com/nickmilo/plash) with a scriptable CLI, per-display wallpaper assignments, and a clean menu bar interface.
 
