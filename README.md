@@ -2,8 +2,6 @@
 
 A native macOS menu bar app that renders video wallpapers on your desktop using AVPlayer. Built with Swift and AppKit — no third-party dependencies.
 
-Replaces [Plash](https://github.com/nickmilo/plash) with a scriptable CLI, per-display wallpaper assignments, and a clean menu bar interface.
-
 ## Features
 
 - Full-screen video wallpaper on every connected display
